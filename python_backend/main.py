@@ -12,12 +12,12 @@ import os
 
 
 
-# Initialize FastAPI app
+
 app = FastAPI(title="Product Assistant API", version="1.0.0")
 
 
 
-# 👇 Allow requests from React frontend
+
 origins = [
     "http://localhost:3000",  # React dev server
     "http://127.0.0.1:3000",   # Sometimes needed
@@ -26,15 +26,15 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,           # 👈 Frontend origins
+    allow_origins=origins,         
     allow_credentials=True,
-    allow_methods=["*"],             # 👈 Allow all methods: GET, POST, etc.
-    allow_headers=["*"],             # 👈 Allow all headers
+    allow_methods=["*"],            
+    allow_headers=["*"],            
 )
-# Initialize OpenAI client
+
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Request/Response models
+
 class ChatRequest(BaseModel):
     message: str
     conversation_history: Optional[List[Dict[str, str]]] = []
@@ -50,7 +50,7 @@ class Product(BaseModel):
     stock: int
     thumbnail: str
 
-# DummyJSON API functions
+
 async def get_all_products() -> Dict[str, Any]:
     """Get all products from DummyJSON API"""
     async with httpx.AsyncClient() as client:
@@ -81,7 +81,7 @@ async def get_products_by_category(category: str) -> Dict[str, Any]:
         response = await client.get(f"https://dummyjson.com/products/category/{category}")
         return response.json()
 
-# Helper functions for intelligent product filtering
+
 async def find_matching_category(user_query: str, categories: List[str]) -> str:
     """Use OpenAI to find the most semantically similar category"""
     try:
@@ -124,7 +124,7 @@ async def filter_products_by_price_range(products: List[Dict], min_price: float 
         filtered = [p for p in filtered if p.get('price', float('inf')) <= max_price]
     return filtered
 
-# Tool functions for OpenAI
+
 tools = [
     {
         "type": "function",
@@ -247,7 +247,7 @@ tools = [
     }
 ]
 
-# Tool execution functions
+
 async def execute_tool_call(tool_call) -> str:
     """Execute a tool call and return the result"""
     function_name = tool_call.function.name
@@ -357,7 +357,7 @@ async def execute_tool_call(tool_call) -> str:
 async def generate_streaming_response(request: ChatRequest):
     """Generate streaming response using OpenAI with tool calling"""
     
-    # System prompt
+
     system_prompt = """You are a helpful product assistant for an e-commerce store. You can help users:
     
     1. Search for products
@@ -376,15 +376,14 @@ async def generate_streaming_response(request: ChatRequest):
     
     Be conversational, helpful, and provide detailed product information when requested.
     """
-    
-    # Build messages
+
     messages = [{"role": "system", "content": system_prompt}]
     
-    # Add conversation history
+
     for msg in request.conversation_history:
         messages.append(msg)
     
-    # Add current user message
+
     messages.append({"role": "user", "content": request.message})
     
     # First call to OpenAI with tools
